@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+// options for Java codegen
+option java_multiple_files = true;
+option java_package = "me.kano.grpc.bluewand";
+option java_outer_classname = "BlueWandProto";
+package bluewand;
+
+// Interface exported by the server
+service BlueWand {
+  // A simple RPC
+  //
+  // When started, the server will automatically connect the closest Wand.
+  // Characteristics are automatically subscribed for Button Press &
+  // Quantarions.
+  //
+  // When a client connects to the RPC server, they can subscribe to the
+  // callbacks, and receive the stream on either or both OnButton and/or
+  // OnMotion events
+
+  // OnConnect server to client single call to return a single Wand unique
+  // Identifier.
+  rpc OnConnect(EmptyMessage) returns(Identifier) {}
+
+  // OnButton server to client streaming RPC endpoint
+  // Call to receive Button Press streaming message for the Button state.
+  rpc OnButton(Identifier) returns(stream ButtonMessage) {}
+
+  // OnMotion server to client streaming RPC endpoint
+  // Call to receive Motion Move streaming message for the Motion in Quantarion
+  // state.
+  rpc OnMotion(Identifier) returns(stream MotionMessage) {}
+}
+
+// EmptyMessage is represented as an empty payload sent to the RPC endpoint
+message EmptyMessage {}
+
+// Indentifier is represented as the unique indentifer string (UUID) of the
+// Wand.
+message Identifier { string uid = 1; }
+
+// ButtonMessage is represented as a boolean of whether the Button is in Pressed
+// state.
+message ButtonMessage { bool pressed = 1; }
+
+// MotionMessage is represented as a set of Quantarion Units at a current state
+// Raw uints are 2 bytes and are converted to Uint32 before sending the wire.
+message MotionMessage {
+  uint32 w = 1;
+  uint32 x = 2;
+  uint32 y = 3;
+  uint32 z = 4;
+}
