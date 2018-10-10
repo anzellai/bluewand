@@ -101,11 +101,14 @@ func New(l *log.Entry, d time.Duration) *WandKit {
 	ble.SetDefaultDevice(wk.device)
 
 	sigc := make(chan os.Signal, 1)
-	signal.Notify(sigc, syscall.SIGINT)
+	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigc
 		if wk.p != nil && wk.subscriptions != nil && len(wk.subscriptions) > 0 {
 			for _, subscription := range wk.subscriptions {
+				if subscription == nil {
+					continue
+				}
 				subLogger := wk.logger.WithFields(log.Fields{
 					"subscription":        subscription.UUID.String(),
 					"subscription_name":   ble.Name(subscription.UUID),
@@ -178,7 +181,10 @@ func (wk *WandKit) Connect() {
 
 // Unsubscribe will explore BLE instance and unsubscibe already subscribed characteristic
 func (wk *WandKit) Unsubscribe(uid string) {
-	for idx, c := range wk.subscriptions {
+	for _, c := range wk.subscriptions {
+		if c == nil {
+			continue
+		}
 		if c.UUID.Equal(ble.UUID(uid)) {
 			chrLogger := wk.logger.WithFields(log.Fields{
 				"characteristic":           c.UUID.String(),
@@ -192,8 +198,6 @@ func (wk *WandKit) Unsubscribe(uid string) {
 			}
 			chrLogger.Info("characteristic unsubscribed")
 		}
-		wk.subscriptions[idx] = nil
-		wk.subscriptions = append(wk.subscriptions[:idx], wk.subscriptions[idx+1:]...)
 	}
 }
 

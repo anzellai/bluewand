@@ -32,7 +32,7 @@ func onConnect(client pb.BlueWandClient, empty *pb.EmptyMessage) {
 }
 
 func onButton(client pb.BlueWandClient, identifier *pb.Identifier) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	stream, err := client.OnButton(ctx, identifier)
 	if err != nil {
@@ -57,7 +57,7 @@ func onButton(client pb.BlueWandClient, identifier *pb.Identifier) {
 }
 
 func onMotion(client pb.BlueWandClient, identifier *pb.Identifier) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	stream, err := client.OnMotion(ctx, identifier)
 	if err != nil {
@@ -104,5 +104,11 @@ func main() {
 
 	client := pb.NewBlueWandClient(conn)
 	onConnect(client, &pb.EmptyMessage{})
-	onButton(client, wand)
+
+	// run in a goroutine as this call is blocking
+	go func() {
+		onButton(client, wand)
+	}()
+	// we can call this to block
+	onMotion(client, wand)
 }
