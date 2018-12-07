@@ -31,6 +31,13 @@ darwin:
 	GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BUILD_DIR}/bin/darwin/${BINARY}-client . ; \
 	cd - >/dev/null
 
+rasberry3:
+	cd ${BUILD_DIR}/server; \
+	GOOS=linux GOARCH=arm GOARM=6 go build ${LDFLAGS} -o ${BUILD_DIR}/bin/rasberry3/${BINARY}-server . ; \
+	cd ${BUILD_DIR}/client; \
+	GOOS=linux GOARCH=arm GOARM=6 go build ${LDFLAGS} -o ${BUILD_DIR}/bin/rasberry3/${BINARY}-client . ; \
+	cd - >/dev/null
+
 vet:
 	-cd ${BUILD_DIR}; \
 	go vet ./... > ${VET_REPORT} 2>&1 ; \
@@ -52,10 +59,11 @@ build:
 	make vet; \
 	make linux; \
 	make darwin;
+	make rasberry3;
 
 clean:
 	-rm -f ${BUILD_DIR}/${VET_REPORT}
 	-rm -rf ${BUILD_DIR}/bluewand/*.pb.go
 	-rm -rf ${BUILD_DIR}/bin
 
-.PHONY: linux darwin vet fmt clean proto build
+.PHONY: linux darwin rasberry3 vet fmt clean proto build
